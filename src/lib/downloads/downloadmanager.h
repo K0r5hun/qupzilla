@@ -30,12 +30,12 @@ class DownloadManager;
 
 class QNetworkReply;
 class QNetworkRequest;
+class QNetworkAccessManager;
 class QListWidgetItem;
 class QUrl;
 
 class DownloadItem;
 class EcWin7;
-class NetworkManager;
 class WebPage;
 
 class QUPZILLA_EXPORT DownloadManager : public QWidget
@@ -107,7 +107,7 @@ private:
     void keyPressEvent(QKeyEvent* e);
 
     Ui::DownloadManager* ui;
-    NetworkManager* m_networkManager;
+    QNetworkAccessManager* m_networkManager;
     QBasicTimer m_timer;
 
     QString m_lastDownloadPath;

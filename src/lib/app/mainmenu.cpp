@@ -35,7 +35,7 @@
 #include <QApplication>
 #include <QMetaObject>
 #include <QStatusBar>
-#include <QWebPage>
+#include <QWebEnginePage>
 #include <QMenuBar>
 
 static QKeySequence actionShortcut(QKeySequence shortcut, QKeySequence fallBack, QKeySequence shortcutRTL = QKeySequence(), QKeySequence fallbackRTL = QKeySequence())
@@ -298,11 +298,13 @@ void MainMenu::webSearch()
 
 void MainMenu::showSiteInfo()
 {
+#if QTWEBENGINE_DISABLED
     if (m_window) {
         SiteInfo* info = new SiteInfo(m_window->weView(), m_window);
         info->setAttribute(Qt::WA_DeleteOnClose);
         info->show();
     }
+#endif
 }
 
 void MainMenu::showDownloadManager()
@@ -398,8 +400,10 @@ void MainMenu::aboutToShowViewMenu()
     m_actions[QSL("View/FullScreen")]->setChecked(m_window->isFullScreen());
     m_actions[QSL("View/PageSource")]->setEnabled(true);
 
+#if QTWEBENGINE_DISABLED
 #if QTWEBKIT_FROM_2_3
-    m_actions[QSL("View/CaretBrowsing")]->setChecked(m_window->weView()->settings()->testAttribute(QWebSettings::CaretBrowsingEnabled));
+    m_actions[QSL("View/CaretBrowsing")]->setChecked(m_window->weView()->settings()->testAttribute(QWebEngineSettings::CaretBrowsingEnabled));
+#endif
 #endif
 }
 
@@ -416,12 +420,12 @@ void MainMenu::aboutToShowEditMenu()
 
     WebView* view = m_window->weView();
 
-    m_actions[QSL("Edit/Undo")]->setEnabled(view->pageAction(QWebPage::Undo)->isEnabled());
-    m_actions[QSL("Edit/Redo")]->setEnabled(view->pageAction(QWebPage::Redo)->isEnabled());
-    m_actions[QSL("Edit/Cut")]->setEnabled(view->pageAction(QWebPage::Cut)->isEnabled());
-    m_actions[QSL("Edit/Copy")]->setEnabled(view->pageAction(QWebPage::Copy)->isEnabled());
-    m_actions[QSL("Edit/Paste")]->setEnabled(view->pageAction(QWebPage::Paste)->isEnabled());
-    m_actions[QSL("Edit/SelectAll")]->setEnabled(view->pageAction(QWebPage::SelectAll)->isEnabled());
+    m_actions[QSL("Edit/Undo")]->setEnabled(view->pageAction(QWebEnginePage::Undo)->isEnabled());
+    m_actions[QSL("Edit/Redo")]->setEnabled(view->pageAction(QWebEnginePage::Redo)->isEnabled());
+    m_actions[QSL("Edit/Cut")]->setEnabled(view->pageAction(QWebEnginePage::Cut)->isEnabled());
+    m_actions[QSL("Edit/Copy")]->setEnabled(view->pageAction(QWebEnginePage::Copy)->isEnabled());
+    m_actions[QSL("Edit/Paste")]->setEnabled(view->pageAction(QWebEnginePage::Paste)->isEnabled());
+    m_actions[QSL("Edit/SelectAll")]->setEnabled(view->pageAction(QWebEnginePage::SelectAll)->isEnabled());
 }
 
 void MainMenu::aboutToHideEditMenu()

@@ -24,7 +24,6 @@
 #include "iconprovider.h"
 #include "enhancedmenu.h"
 
-#include <QWebFrame>
 #include <QContextMenuEvent>
 
 PopupWebView::PopupWebView(QWidget* parent)
@@ -85,13 +84,14 @@ void PopupWebView::closeView()
 
 void PopupWebView::inspectElement()
 {
-    triggerPageAction(QWebPage::InspectElement);
+    triggerPageAction(QWebEnginePage::InspectElement);
 }
 
 void PopupWebView::contextMenuEvent(QContextMenuEvent* event)
 {
     m_menu->clear();
 
+#if QTWEBENGINE_DISABLED
     const QWebHitTestResult hitTest = page()->mainFrame()->hitTestContent(event->pos());
 
     createContextMenu(m_menu, hitTest, event->pos());
@@ -106,6 +106,7 @@ void PopupWebView::contextMenuEvent(QContextMenuEvent* event)
         m_menu->popup(p);
         return;
     }
+#endif
 
     WebView::contextMenuEvent(event);
 }

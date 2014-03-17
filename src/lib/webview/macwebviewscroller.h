@@ -22,13 +22,13 @@
 #include <QPoint>
 
 class QWheelEvent;
-class QWebView;
+class QWebEngineView;
 
 class MacWebViewScroller : public QObject
 {
     Q_OBJECT
 public:
-    explicit MacWebViewScroller(QWebView* view);
+    explicit MacWebViewScroller(QWebEngineView* view);
 
     bool eventFilter(QObject* obj, QEvent* event);
 
@@ -36,7 +36,7 @@ private slots:
     void sendWheelEvent();
 
 private:
-    QWebView* m_view;
+    QWebEngineView* m_view;
 
     bool m_timerRunning;
     int m_delta;

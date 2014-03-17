@@ -28,6 +28,7 @@
 
 class QMenu;
 class QNetworkDiskCache;
+class QNetworkAccessManager;
 
 class History;
 class AutoFill;
@@ -39,7 +40,6 @@ class ProxyStyle;
 class PluginProxy;
 class CookieManager;
 class BrowserWindow;
-class NetworkManager;
 class BrowsingLibrary;
 class DownloadManager;
 class UserAgentManager;
@@ -95,9 +95,11 @@ public:
     QNetworkDiskCache* networkCache();
     BrowsingLibrary* browsingLibrary();
 
+#if QTWEBENGINE_DISABLED
     RSSManager* rssManager();
+#endif
     CookieManager* cookieManager();
-    NetworkManager* networkManager();
+    QNetworkAccessManager* networkManager();
     RestoreManager* restoreManager();
     DownloadManager* downloadManager();
     UserAgentManager* userAgentManager();
@@ -162,7 +164,7 @@ private:
 
     RSSManager* m_rssManager;
     CookieManager* m_cookieManager;
-    NetworkManager* m_networkManager;
+    QNetworkAccessManager* m_networkManager;
     RestoreManager* m_restoreManager;
     DownloadManager* m_downloadManager;
     UserAgentManager* m_userAgentManager;

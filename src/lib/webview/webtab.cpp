@@ -27,8 +27,7 @@
 #include "mainapplication.h"
 
 #include <QVBoxLayout>
-#include <QWebHistory>
-#include <QWebFrame>
+#include <QWebEngineHistory>
 #include <QLabel>
 #include <QStyle>
 #include <QTimer>
@@ -164,7 +163,7 @@ QIcon WebTab::icon() const
     }
 }
 
-QWebHistory* WebTab::history() const
+QWebEngineHistory* WebTab::history() const
 {
     return m_view->history();
 }
@@ -294,6 +293,7 @@ void WebTab::p_restoreTab(const WebTab::SavedTab &tab)
 
 QPixmap WebTab::renderTabPreview()
 {
+#if QTWEBENGINE_DISABLED
     TabbedWebView* currentWebView = m_window->weView();
     WebPage* page = m_view->page();
     const QSize oldSize = page->viewportSize();
@@ -319,7 +319,7 @@ QPixmap WebTab::renderTabPreview()
 
     QPainter p(&pageImage);
     p.scale(scalingFactor, scalingFactor);
-    m_view->page()->mainFrame()->render(&p, QWebFrame::ContentsLayer);
+    m_view->page()->mainFrame()->render(&p, QWebEngineFrame::ContentsLayer);
     p.end();
 
     page->setViewportSize(oldSize);
@@ -328,6 +328,9 @@ QPixmap WebTab::renderTabPreview()
     page->mainFrame()->setScrollBarValue(Qt::Horizontal, originalScrollPosition.x());
 
     return pageImage.scaled(previewWidth, previewHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+#else
+    return QPixmap();
+#endif
 }
 
 void WebTab::showNotification(QWidget* notif)

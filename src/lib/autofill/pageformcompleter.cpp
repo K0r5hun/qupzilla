@@ -18,14 +18,12 @@
 #include "pageformcompleter.h"
 #include "qzregexp.h"
 
-#include <QWebPage>
-#include <QWebFrame>
-#include <QWebElement>
+#include <QWebEnginePage>
 #if QT_VERSION >= 0x050000
 #include <QUrlQuery>
 #endif
 
-PageFormCompleter::PageFormCompleter(QWebPage* page)
+PageFormCompleter::PageFormCompleter(QWebEnginePage* page)
     : m_page(page)
 {
 }
@@ -48,6 +46,7 @@ PageFormData PageFormCompleter::extractFormData(const QByteArray &postData) cons
         return formData;
     }
 
+#if QTWEBENGINE_DISABLED
     const QWebElementCollection allForms = getAllElementsFromPage("form");
 
     // Find form that contains password value sent in data
@@ -84,6 +83,7 @@ PageFormData PageFormCompleter::extractFormData(const QByteArray &postData) cons
 
     formData.username = usernameValue;
     formData.password = passwordValue;
+#endif
 
     return formData;
 }
@@ -98,6 +98,7 @@ bool PageFormCompleter::completePage(const QByteArray &data) const
     QStringList inputTypes;
     inputTypes << "text" << "password" << "email";
 
+#if QTWEBENGINE_DISABLED
     // Find all input elements in the page
     const QWebElementCollection inputs = getAllElementsFromPage("input");
 
@@ -119,6 +120,7 @@ bool PageFormCompleter::completePage(const QByteArray &data) const
             }
         }
     }
+#endif
 
     return completed;
 }
@@ -187,6 +189,7 @@ QByteArray PageFormCompleter::convertWebKitFormBoundaryIfNecessary(const QByteAr
 
 PageFormCompleter::QueryItem PageFormCompleter::findUsername(const QWebElement &form) const
 {
+#if QTWEBENGINE_DISABLED
     // Try to find username (or email) field in the form.
     QStringList selectors;
     selectors << "input[type=\"text\"][name*=\"user\"]"
@@ -209,6 +212,7 @@ PageFormCompleter::QueryItem PageFormCompleter::findUsername(const QWebElement &
             }
         }
     }
+#endif
 
     return QueryItem();
 }
@@ -229,6 +233,7 @@ PageFormCompleter::QueryItems PageFormCompleter::createQueryItems(QByteArray dat
     return arguments;
 }
 
+#if QTWEBENGINE_DISABLED
 QWebElementCollection PageFormCompleter::getAllElementsFromPage(const QString &selector) const
 {
     QWebElementCollection list;
@@ -237,10 +242,10 @@ QWebElementCollection PageFormCompleter::getAllElementsFromPage(const QString &s
         return list;
     }
 
-    QList<QWebFrame*> frames;
+    QList<QWebEngineFrame*> frames;
     frames.append(m_page->mainFrame());
     while (!frames.isEmpty()) {
-        QWebFrame* frame = frames.takeFirst();
+        QWebEngineFrame* frame = frames.takeFirst();
         if (frame) {
             list.append(frame->findAllElements(selector));
             frames += frame->childFrames();
@@ -249,3 +254,5 @@ QWebElementCollection PageFormCompleter::getAllElementsFromPage(const QString &s
 
     return list;
 }
+
+#endif

@@ -24,6 +24,8 @@
 
 #include <QNetworkRequest>
 
+#if QTWEBENGINE_DISABLED
+
 WebPluginFactory::WebPluginFactory(WebPage* page)
     : QWebPluginFactory(page)
     , m_page(page)
@@ -97,3 +99,5 @@ QList<QWebPluginFactory::Plugin> WebPluginFactory::plugins() const
 //    plugins.append(plugin);
 //    return plugins;
 }
+
+#endif

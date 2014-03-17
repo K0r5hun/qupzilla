@@ -18,6 +18,8 @@
 #ifndef NETWORKMANAGER_H
 #define NETWORKMANAGER_H
 
+#if QTWEBENGINE_DISABLED
+
 #include <QSslError>
 #include <QStringList>
 
@@ -84,5 +86,7 @@ private:
     bool m_doNotTrack;
     bool m_sendReferer;
 };
+
+#endif
 
 #endif // NETWORKMANAGER_H

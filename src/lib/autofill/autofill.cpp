@@ -29,7 +29,6 @@
 
 #include <QXmlStreamWriter>
 #include <QXmlStreamReader>
-#include <QWebFrame>
 #include <QNetworkRequest>
 
 #if QT_VERSION >= 0x050000

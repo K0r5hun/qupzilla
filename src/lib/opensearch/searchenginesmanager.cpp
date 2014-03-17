@@ -29,7 +29,6 @@
 
 #include <QNetworkReply>
 #include <QMessageBox>
-#include <QWebElement>
 #include <QSqlQuery>
 #include <QBuffer>
 
@@ -264,6 +263,7 @@ void SearchEnginesManager::addEngine(const Engine &engine)
 
 void SearchEnginesManager::addEngineFromForm(const QWebElement &element, WebView* view)
 {
+#if QTWEBENGINE_DISABLED
     QWebElement formElement = element.parent();
 
     while (!formElement.isNull()) {
@@ -365,6 +365,7 @@ void SearchEnginesManager::addEngineFromForm(const QWebElement &element, WebView
     }
 
     addEngine(engine);
+#endif
 }
 
 void SearchEnginesManager::addEngine(OpenSearchEngine* engine)

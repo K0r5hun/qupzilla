@@ -26,11 +26,13 @@
 #include "qztools.h"
 #include "iconprovider.h"
 
+#if QTWEBENGINE_DISABLED
+
 #include <QMenu>
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QNetworkDiskCache>
-#include <QWebFrame>
+#include <QWebEngineFrame>
 #include <QClipboard>
 #include <QWebSecurityOrigin>
 #include <QWebDatabase>
@@ -65,7 +67,7 @@ SiteInfo::SiteInfo(WebView* view, QWidget* parent)
     ui->listWidget->item(0)->setSelected(true);
 
     WebPage* webPage = view->page();
-    QWebFrame* frame = view->page()->mainFrame();
+    QWebEngineFrame* frame = view->page()->mainFrame();
     QString title = view->title();
     QSslCertificate cert = webPage->sslCertificate();
     m_baseUrl = frame->baseUrl();
@@ -102,7 +104,7 @@ SiteInfo::SiteInfo(WebView* view, QWidget* parent)
         ui->treeTags->addTopLevelItem(item);
     }
     if (encoding.isEmpty()) {
-        encoding = QWebSettings::globalSettings()->defaultTextEncoding();
+        encoding = QWebEngineSettings::globalSettings()->defaultTextEncoding();
     }
     ui->encodingLabel->setText(encoding.toUpper());
 
@@ -297,3 +299,5 @@ SiteInfo::~SiteInfo()
     delete ui;
     delete m_certWidget;
 }
+
+#endif

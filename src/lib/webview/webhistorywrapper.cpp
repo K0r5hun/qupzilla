@@ -19,15 +19,15 @@
 
 #include <QUrl>
 #include <QVariant>
-#include <QWebHistory>
+#include <QWebEngineHistory>
 
-QList<QWebHistoryItem> WebHistoryWrapper::forwardItems(int maxItems, QWebHistory* history)
+QList<QWebEngineHistoryItem> WebHistoryWrapper::forwardItems(int maxItems, QWebEngineHistory* history)
 {
-    QList<QWebHistoryItem> list;
+    QList<QWebEngineHistoryItem> list;
     QUrl lastUrl = history->currentItem().url();
 
     int count = 0;
-    foreach (const QWebHistoryItem &item, history->forwardItems(maxItems + 5)) {
+    foreach (const QWebEngineHistoryItem &item, history->forwardItems(maxItems + 5)) {
         if (item.url() == lastUrl || count == maxItems) {
             continue;
         }
@@ -40,15 +40,15 @@ QList<QWebHistoryItem> WebHistoryWrapper::forwardItems(int maxItems, QWebHistory
     return list;
 }
 
-QList<QWebHistoryItem> WebHistoryWrapper::backItems(int maxItems, QWebHistory* history)
+QList<QWebEngineHistoryItem> WebHistoryWrapper::backItems(int maxItems, QWebEngineHistory* history)
 {
-    QList<QWebHistoryItem> list;
+    QList<QWebEngineHistoryItem> list;
     QUrl lastUrl = history->currentItem().url();
 
     int count = 0;
-    QList<QWebHistoryItem> bItems = history->backItems(maxItems + 5);
+    QList<QWebEngineHistoryItem> bItems = history->backItems(maxItems + 5);
     for (int i = bItems.count() - 1; i >= 0; i--) {
-        QWebHistoryItem item = bItems.at(i);
+        QWebEngineHistoryItem item = bItems.at(i);
         if (item.url() == lastUrl || count == maxItems) {
             continue;
         }
@@ -61,19 +61,19 @@ QList<QWebHistoryItem> WebHistoryWrapper::backItems(int maxItems, QWebHistory* h
     return list;
 }
 
-bool WebHistoryWrapper::canGoForward(QWebHistory* history)
+bool WebHistoryWrapper::canGoForward(QWebEngineHistory* history)
 {
     return !forwardItems(1, history).isEmpty();
 }
 
-bool WebHistoryWrapper::canGoBack(QWebHistory* history)
+bool WebHistoryWrapper::canGoBack(QWebEngineHistory* history)
 {
     return !backItems(1, history).isEmpty();
 }
 
-void WebHistoryWrapper::goBack(QWebHistory* history)
+void WebHistoryWrapper::goBack(QWebEngineHistory* history)
 {
-    QList<QWebHistoryItem> items = backItems(1, history);
+    QList<QWebEngineHistoryItem> items = backItems(1, history);
 
     if (items.isEmpty()) {
         return;
@@ -82,9 +82,9 @@ void WebHistoryWrapper::goBack(QWebHistory* history)
     history->goToItem(items.at(0));
 }
 
-void WebHistoryWrapper::goForward(QWebHistory* history)
+void WebHistoryWrapper::goForward(QWebEngineHistory* history)
 {
-    QList<QWebHistoryItem> items = forwardItems(1, history);
+    QList<QWebEngineHistoryItem> items = forwardItems(1, history);
 
     if (items.isEmpty()) {
         return;
@@ -93,10 +93,10 @@ void WebHistoryWrapper::goForward(QWebHistory* history)
     history->goToItem(items.at(0));
 }
 
-int WebHistoryWrapper::indexOfItem(const QList<QWebHistoryItem> &list, const QWebHistoryItem &item)
+int WebHistoryWrapper::indexOfItem(const QList<QWebEngineHistoryItem> &list, const QWebEngineHistoryItem &item)
 {
     for (int i = 0; i < list.count(); i++) {
-        QWebHistoryItem it = list.at(i);
+        QWebEngineHistoryItem it = list.at(i);
 
         if (it.lastVisited() == item.lastVisited() &&
                 it.originalUrl() == item.originalUrl() &&

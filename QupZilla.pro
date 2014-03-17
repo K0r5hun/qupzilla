@@ -17,4 +17,7 @@ TEMPLATE = subdirs
 SUBDIRS = src/lib src/main
 CONFIG += ordered
 
-SUBDIRS += src/plugins
+# QTWEBENGINE DISABLED
+#SUBDIRS += src/plugins
+
+#if QTWEBENGINE_DISABLED

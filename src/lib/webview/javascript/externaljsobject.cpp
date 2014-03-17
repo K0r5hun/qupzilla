@@ -40,7 +40,10 @@ int ExternalJsObject::IsSearchProviderInstalled(const QString &engineURL)
 
 QObject* ExternalJsObject::speedDial()
 {
+    return 0;
+#if QTWEBENGINE_DISABLED
     return m_onSpeedDial ? mApp->plugins()->speedDial() : 0;
+#endif
 }
 
 void ExternalJsObject::setOnSpeedDial(bool on)

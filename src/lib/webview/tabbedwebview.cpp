@@ -35,7 +35,6 @@
 #include <QMovie>
 #include <QStatusBar>
 #include <QHostInfo>
-#include <QWebFrame>
 #include <QContextMenuEvent>
 
 TabbedWebView::TabbedWebView(BrowserWindow* window, WebTab* webTab)
@@ -72,7 +71,7 @@ void TabbedWebView::setWebPage(WebPage* page)
 void TabbedWebView::inspectElement()
 {
     m_window->showWebInspector(false);
-    triggerPageAction(QWebPage::InspectElement);
+    triggerPageAction(QWebEnginePage::InspectElement);
 }
 
 WebTab* TabbedWebView::webTab() const
@@ -233,6 +232,7 @@ void TabbedWebView::contextMenuEvent(QContextMenuEvent* event)
 {
     m_menu->clear();
 
+#if QTWEBENGINE_DISABLED
     const QWebHitTestResult hitTest = page()->mainFrame()->hitTestContent(event->pos());
 
     createContextMenu(m_menu, hitTest, event->pos());
@@ -252,13 +252,14 @@ void TabbedWebView::contextMenuEvent(QContextMenuEvent* event)
         m_menu->popup(p);
         return;
     }
+#endif
 
     WebView::contextMenuEvent(event);
 }
 
 void TabbedWebView::stop()
 {
-    triggerPageAction(QWebPage::Stop);
+    triggerPageAction(QWebEnginePage::Stop);
     slotLoadFinished();
 }
 

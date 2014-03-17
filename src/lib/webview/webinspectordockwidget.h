@@ -18,6 +18,8 @@
 #ifndef WEBINSPECTORDOCKWIDGET_H
 #define WEBINSPECTORDOCKWIDGET_H
 
+
+#if QTWEBENGINE_DISABLED
 #include <QWebInspector>
 #include <QDockWidget>
 #include <QPointer>
@@ -56,9 +58,11 @@ public slots:
 
 private:
     BrowserWindow* m_window;
-    QHash<QWebPage*, QPointer<WebInspector> > m_inspectors;
+    QHash<QWebEnginePage*, QPointer<WebInspector> > m_inspectors;
 
     QPointer<WebInspector> m_currentInspector;
 };
+
+#endif
 
 #endif // WEBINSPECTORDOCKWIDGET_H

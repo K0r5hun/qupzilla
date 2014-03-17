@@ -19,13 +19,13 @@
 
 #include <QApplication>
 #include <QWheelEvent>
-#include <QWebView>
+#include <QWebEngineView>
 #include <QTimer>
 
 // Workaround for QTBUG-22269 (Extremely slow scrolling on Apple trackpads)
 // https://bugreports.qt-project.org/browse/QTBUG-22269
 
-MacWebViewScroller::MacWebViewScroller(QWebView* view)
+MacWebViewScroller::MacWebViewScroller(QWebEngineView* view)
     : QObject(view)
     , m_view(view)
     , m_timerRunning(false)

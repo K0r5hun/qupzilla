@@ -41,8 +41,7 @@
 #include <QMimeData>
 #include <QStackedWidget>
 #include <QMouseEvent>
-#include <QWebHistory>
-#include <QWebFrame>
+#include <QWebEngineHistory>
 #include <QClipboard>
 #include <QFile>
 #include <QScrollArea>
@@ -468,7 +467,7 @@ int TabWidget::addView(QNetworkRequest req, const QString &title, const Qz::NewT
 
     if (openFlags & Qz::NT_NotSelectedTab) {
         WebTab* currentWebTab = weTab();
-        // Workarounding invalid QWebPage::viewportSize() until QWebView is shown
+        // Workarounding invalid QWebEnginePage::viewportSize() until QWebEngineView is shown
         // Fixes invalid scrolling to anchor(#) links
         if (currentWebTab && currentWebTab->view()) {
             TabbedWebView* currentView = currentWebTab->view();

@@ -45,18 +45,16 @@
 #include <QTimer>
 #include <QDesktopServices>
 #include <QNetworkRequest>
-#include <QWebHistory>
-#include <QWebFrame>
+#include <QWebEngineHistory>
 #include <QClipboard>
 #include <QTouchEvent>
 #include <QPrintPreviewDialog>
 
 WebView::WebView(QWidget* parent)
-    : QWebView(parent)
+    : QWebEngineView(parent)
     , m_currentZoom(100)
     , m_isLoading(false)
     , m_progress(0)
-    , m_clickedFrame(0)
     , m_page(0)
     , m_actionReload(0)
     , m_actionStop(0)
@@ -98,9 +96,11 @@ QIcon WebView::icon() const
         return IconProvider::standardIcon(QStyle::SP_ComputerIcon);
     }
 
-    if (!QWebView::icon().isNull()) {
-        return QWebView::icon();
+#if QTWEBENGINE_DISABLED
+    if (!QWebEngineView::icon().isNull()) {
+        return QWebEngineView::icon();
     }
+#endif
 
     if (!m_siteIcon.isNull() && m_siteIconUrl.host() == url().host()) {
         return m_siteIcon;
@@ -111,7 +111,7 @@ QIcon WebView::icon() const
 
 QString WebView::title() const
 {
-    QString title = QWebView::title();
+    QString title = QWebEngineView::title();
 
     if (title.isEmpty()) {
         title = url().toString(QUrl::RemoveFragment);
@@ -144,26 +144,28 @@ WebPage* WebView::page() const
     return m_page;
 }
 
-void WebView::setPage(QWebPage* page)
+void WebView::setPage(QWebEnginePage* page)
 {
     if (m_page == page) {
         return;
     }
 
-    QWebView::setPage(page);
+    QWebEngineView::setPage(page);
     m_page = qobject_cast<WebPage*>(page);
 
     setZoom(qzSettings->defaultZoom);
-    connect(m_page, SIGNAL(saveFrameStateRequested(QWebFrame*,QWebHistoryItem*)), this, SLOT(frameStateChanged()));
+    connect(m_page, SIGNAL(saveFrameStateRequested(QWebEngineFrame*,QWebEngineHistoryItem*)), this, SLOT(frameStateChanged()));
     connect(m_page, SIGNAL(privacyChanged(bool)), this, SIGNAL(privacyChanged(bool)));
 
     mApp->plugins()->emitWebPageCreated(m_page);
 
+#if QTWEBENGINE_DISABLED
     // Set white background by default.
     // Fixes issue with dark themes. See #602
     QPalette pal = palette();
     pal.setBrush(QPalette::Base, Qt::white);
     page->setPalette(pal);
+#endif
 }
 
 void WebView::load(const QUrl &url)
@@ -185,12 +187,12 @@ void WebView::load(const QNetworkRequest &request, QNetworkAccessManager::Operat
         else {
             scriptSource = QUrl::fromPercentEncoding(reqUrl.toString().mid(11).toUtf8());
         }
-        page()->mainFrame()->evaluateJavaScript(scriptSource);
+        page()->runJavaScript(scriptSource);
         return;
     }
 
     if (reqUrl.isEmpty() || isUrlValid(reqUrl)) {
-        QWebView::load(request, operation, body);
+        QWebEngineView::load(request.url());
         m_aboutToLoadUrl = reqUrl;
         return;
     }
@@ -198,7 +200,7 @@ void WebView::load(const QNetworkRequest &request, QNetworkAccessManager::Operat
     SearchEnginesManager::SearchResult res = mApp->searchEnginesManager()->searchResult(reqUrl.toString());
     const QUrl searchUrl = res.request.url();
 
-    QWebView::load(res.request, res.operation, res.data);
+    QWebEngineView::load(res.request.url());
     m_aboutToLoadUrl = searchUrl;
 }
 
@@ -228,20 +230,23 @@ bool WebView::hasRss() const
     return m_hasRss;
 }
 
+#if QTWEBENGINE_DISABLED
 QWebElement WebView::activeElement() const
 {
     QRect activeRect = inputMethodQuery(Qt::ImMicroFocus).toRect();
     return page()->mainFrame()->hitTestContent(activeRect.center()).element();
 }
+#endif
 
 bool WebView::onBeforeUnload()
 {
+#if QTWEBENGINE_DISABLED
     const QString res = page()->mainFrame()->evaluateJavaScript("window.onbeforeunload(new Event(\"beforeunload\"))").toString();
 
     if (!res.isEmpty()) {
         return page()->javaScriptConfirm(page()->mainFrame(), res);
     }
-
+#endif
     return true;
 }
 
@@ -326,32 +331,32 @@ void WebView::zoomReset()
 
 void WebView::editUndo()
 {
-    triggerPageAction(QWebPage::Undo);
+    triggerPageAction(QWebEnginePage::Undo);
 }
 
 void WebView::editRedo()
 {
-    triggerPageAction(QWebPage::Redo);
+    triggerPageAction(QWebEnginePage::Redo);
 }
 
 void WebView::editCut()
 {
-    triggerPageAction(QWebPage::Cut);
+    triggerPageAction(QWebEnginePage::Cut);
 }
 
 void WebView::editCopy()
 {
-    triggerPageAction(QWebPage::Copy);
+    triggerPageAction(QWebEnginePage::Copy);
 }
 
 void WebView::editPaste()
 {
-    triggerPageAction(QWebPage::Paste);
+    triggerPageAction(QWebEnginePage::Paste);
 }
 
 void WebView::editSelectAll()
 {
-    triggerPageAction(QWebPage::SelectAll);
+    triggerPageAction(QWebEnginePage::SelectAll);
 }
 
 void WebView::editDelete()
@@ -363,22 +368,22 @@ void WebView::editDelete()
 void WebView::reload()
 {
     m_isReloading = true;
-    if (QWebView::url().isEmpty() && !m_aboutToLoadUrl.isEmpty()) {
+    if (QWebEngineView::url().isEmpty() && !m_aboutToLoadUrl.isEmpty()) {
         load(m_aboutToLoadUrl);
         return;
     }
 
-    QWebView::reload();
+    QWebEngineView::reload();
 }
 
 void WebView::reloadBypassCache()
 {
-    triggerPageAction(QWebPage::ReloadAndBypassCache);
+    triggerPageAction(QWebEnginePage::ReloadAndBypassCache);
 }
 
 void WebView::back()
 {
-    QWebHistory* history = page()->history();
+    QWebEngineHistory* history = page()->history();
 
     if (history->canGoBack()) {
         history->back();
@@ -390,7 +395,7 @@ void WebView::back()
 
 void WebView::forward()
 {
-    QWebHistory* history = page()->history();
+    QWebEngineHistory* history = page()->history();
 
     if (history->canGoForward()) {
         history->forward();
@@ -443,7 +448,7 @@ void WebView::slotLoadFinished()
 
 void WebView::frameStateChanged()
 {
-    // QWebFrame::baseUrl() is not updated yet, so we are invoking 0 second timer
+    // QWebEngineFrame::baseUrl() is not updated yet, so we are invoking 0 second timer
     QTimer::singleShot(0, this, SLOT(emitChangedUrl()));
 }
 
@@ -454,16 +459,18 @@ void WebView::emitChangedUrl()
 
 void WebView::checkRss()
 {
+#if QTWEBENGINE_DISABLED
     if (m_rssChecked) {
         return;
     }
 
     m_rssChecked = true;
-    QWebFrame* frame = page()->mainFrame();
+    QWebEngineFrame* frame = page()->mainFrame();
     const QWebElementCollection links = frame->findAllElements("link[type=\"application/rss+xml\"]");
 
     m_hasRss = links.count() != 0;
     emit rssChanged(m_hasRss);
+#endif
 }
 
 void WebView::slotIconChanged()
@@ -567,7 +574,7 @@ void WebView::downloadUrlToDisk()
 
 void WebView::copyImageToClipboard()
 {
-    triggerPageAction(QWebPage::CopyImageToClipboard);
+    triggerPageAction(QWebEnginePage::CopyImageToClipboard);
 }
 
 void WebView::openActionUrl()
@@ -577,8 +584,9 @@ void WebView::openActionUrl()
     }
 }
 
-void WebView::showSource(QWebFrame* frame, const QString &selectedHtml)
+void WebView::showSource(QWebEngineFrame* frame, const QString &selectedHtml)
 {
+#if QTWEBENGINE_DISABLED
     if (!frame) {
         frame = page()->mainFrame();
     }
@@ -586,12 +594,15 @@ void WebView::showSource(QWebFrame* frame, const QString &selectedHtml)
     SourceViewer* source = new SourceViewer(frame, selectedHtml);
     QzTools::centerWidgetToParent(source, this);
     source->show();
+#endif
 }
 
 void WebView::showSiteInfo()
 {
+#if QTWEBENGINE_DISABLED
     SiteInfo* s = new SiteInfo(this, this);
     s->show();
+#endif
 }
 
 void WebView::searchSelectedText()
@@ -637,8 +648,10 @@ void WebView::bookmarkLink()
 
 void WebView::showSourceOfSelection()
 {
+#if QTWEBENGINE_DISABLED
 #if QTWEBKIT_FROM_2_2
     showSource(page()->mainFrame(), selectedHtml());
+#endif
 #endif
 }
 
@@ -699,22 +712,26 @@ void WebView::userDefinedOpenUrlInBgTab(const QUrl &url)
 
 void WebView::loadClickedFrame()
 {
+#if QTWEBENGINE_DISABLED
     QUrl frameUrl = m_clickedFrame->baseUrl();
     if (frameUrl.isEmpty()) {
         frameUrl = m_clickedFrame->requestedUrl();
     }
 
     load(frameUrl);
+#endif
 }
 
 void WebView::loadClickedFrameInNewTab(bool invert)
 {
+#if QTWEBENGINE_DISABLED
     QUrl frameUrl = m_clickedFrame->baseUrl();
     if (frameUrl.isEmpty()) {
         frameUrl = m_clickedFrame->requestedUrl();
     }
 
     userDefinedOpenUrlInNewTab(frameUrl, invert);
+#endif
 }
 
 void WebView::loadClickedFrameInBgTab()
@@ -724,50 +741,62 @@ void WebView::loadClickedFrameInBgTab()
 
 void WebView::reloadClickedFrame()
 {
+#if QTWEBENGINE_DISABLED
     QUrl frameUrl = m_clickedFrame->baseUrl();
     if (frameUrl.isEmpty()) {
         frameUrl = m_clickedFrame->requestedUrl();
     }
 
     m_clickedFrame->load(frameUrl);
+#endif
 }
 
 void WebView::printClickedFrame()
 {
+#if QTWEBENGINE_DISABLED
     printPage(m_clickedFrame);
+#endif
 }
 
 void WebView::clickedFrameZoomIn()
 {
+#if QTWEBENGINE_DISABLED
     qreal zFactor = m_clickedFrame->zoomFactor() + 0.1;
     if (zFactor > 2.5) {
         zFactor = 2.5;
     }
 
     m_clickedFrame->setZoomFactor(zFactor);
+#endif
 }
 
 void WebView::clickedFrameZoomOut()
 {
+#if QTWEBENGINE_DISABLED
     qreal zFactor = m_clickedFrame->zoomFactor() - 0.1;
     if (zFactor < 0.5) {
         zFactor = 0.5;
     }
 
     m_clickedFrame->setZoomFactor(zFactor);
+#endif
 }
 
 void WebView::clickedFrameZoomReset()
 {
+#if QTWEBENGINE_DISABLED
     m_clickedFrame->setZoomFactor(zoomFactor());
+#endif
 }
 
 void WebView::showClickedFrameSource()
 {
+#if QTWEBENGINE_DISABLED
     showSource(m_clickedFrame);
+#endif
 }
 
-void WebView::printPage(QWebFrame* frame)
+void WebView::printPage(QWebEngineFrame* frame)
 {
     QPrintPreviewDialog* dialog = new QPrintPreviewDialog(this);
     dialog->resize(800, 750);
@@ -776,7 +805,9 @@ void WebView::printPage(QWebFrame* frame)
         connect(dialog, SIGNAL(paintRequested(QPrinter*)), this, SLOT(print(QPrinter*)));
     }
     else {
+#if QTWEBENGINE_DISABLED
         connect(dialog, SIGNAL(paintRequested(QPrinter*)), frame, SLOT(print(QPrinter*)));
+#endif
     }
 
     dialog->exec();
@@ -788,6 +819,7 @@ QUrl WebView::lastUrl()
     return m_lastUrl;
 }
 
+#if QTWEBENGINE_DISABLED
 bool WebView::isMediaElement(const QWebElement &element)
 {
     return (element.tagName().toLower() == QLatin1String("video")
@@ -819,32 +851,36 @@ void WebView::checkForForm(QMenu* menu, const QWebElement &element)
         m_clickedElement = element;
     }
 }
+#endif
 
 void WebView::createSearchEngine()
 {
+#if QTWEBENGINE_DISABLED
     mApp->searchEnginesManager()->addEngineFromForm(m_clickedElement, this);
+#endif
 }
 
+#if QTWEBENGINE_DISABLED
 void WebView::createContextMenu(QMenu* menu, const QWebHitTestResult &hitTest, const QPoint &pos)
 {
     if (!m_actionsInitialized) {
         m_actionsInitialized = true;
 
-        pageAction(QWebPage::Cut)->setIcon(QIcon::fromTheme("edit-cut"));
-        pageAction(QWebPage::Cut)->setText(tr("Cut"));
-        pageAction(QWebPage::Copy)->setIcon(QIcon::fromTheme("edit-copy"));
-        pageAction(QWebPage::Copy)->setText(tr("Copy"));
-        pageAction(QWebPage::Paste)->setIcon(QIcon::fromTheme("edit-paste"));
-        pageAction(QWebPage::Paste)->setText(tr("Paste"));
-        pageAction(QWebPage::SelectAll)->setIcon(QIcon::fromTheme("edit-select-all"));
-        pageAction(QWebPage::SelectAll)->setText(tr("Select All"));
+        pageAction(QWebEnginePage::Cut)->setIcon(QIcon::fromTheme("edit-cut"));
+        pageAction(QWebEnginePage::Cut)->setText(tr("Cut"));
+        pageAction(QWebEnginePage::Copy)->setIcon(QIcon::fromTheme("edit-copy"));
+        pageAction(QWebEnginePage::Copy)->setText(tr("Copy"));
+        pageAction(QWebEnginePage::Paste)->setIcon(QIcon::fromTheme("edit-paste"));
+        pageAction(QWebEnginePage::Paste)->setText(tr("Paste"));
+        pageAction(QWebEnginePage::SelectAll)->setIcon(QIcon::fromTheme("edit-select-all"));
+        pageAction(QWebEnginePage::SelectAll)->setText(tr("Select All"));
 
-        pageAction(QWebPage::SetTextDirectionDefault)->setText(tr("Default"));
-        pageAction(QWebPage::SetTextDirectionLeftToRight)->setText(tr("Left to Right"));
-        pageAction(QWebPage::SetTextDirectionRightToLeft)->setText(tr("Right to Left"));
-        pageAction(QWebPage::ToggleBold)->setText(tr("Bold"));
-        pageAction(QWebPage::ToggleItalic)->setText(tr("Italic"));
-        pageAction(QWebPage::ToggleUnderline)->setText(tr("Underline"));
+        pageAction(QWebEnginePage::SetTextDirectionDefault)->setText(tr("Default"));
+        pageAction(QWebEnginePage::SetTextDirectionLeftToRight)->setText(tr("Left to Right"));
+        pageAction(QWebEnginePage::SetTextDirectionRightToLeft)->setText(tr("Right to Left"));
+        pageAction(QWebEnginePage::ToggleBold)->setText(tr("Bold"));
+        pageAction(QWebEnginePage::ToggleItalic)->setText(tr("Italic"));
+        pageAction(QWebEnginePage::ToggleUnderline)->setText(tr("Underline"));
 
         m_actionReload = new QAction(IconProvider::standardIcon(QStyle::SP_BrowserReload), tr("&Reload"), this);
         m_actionStop = new QAction(IconProvider::standardIcon(QStyle::SP_BrowserStop), tr("S&top"), this);
@@ -886,12 +922,12 @@ void WebView::createContextMenu(QMenu* menu, const QWebHitTestResult &hitTest, c
             // Apparently createStandardContextMenu() can return null pointer
             if (pageMenu) {
                 if (qzSettings->enableFormsUndoRedo) {
-                    pageAction(QWebPage::Undo)->setIcon(QIcon::fromTheme("edit-undo"));
-                    pageAction(QWebPage::Undo)->setText(tr("Undo"));
-                    menu->addAction(pageAction(QWebPage::Undo));
-                    pageAction(QWebPage::Redo)->setIcon(QIcon::fromTheme("edit-redo"));
-                    pageAction(QWebPage::Redo)->setText(tr("Redo"));
-                    menu->addAction(pageAction(QWebPage::Redo));
+                    pageAction(QWebEnginePage::Undo)->setIcon(QIcon::fromTheme("edit-undo"));
+                    pageAction(QWebEnginePage::Undo)->setText(tr("Undo"));
+                    menu->addAction(pageAction(QWebEnginePage::Undo));
+                    pageAction(QWebEnginePage::Redo)->setIcon(QIcon::fromTheme("edit-redo"));
+                    pageAction(QWebEnginePage::Redo)->setText(tr("Redo"));
+                    menu->addAction(pageAction(QWebEnginePage::Redo));
                     menu->addSeparator();
                 }
                 int i = 0;
@@ -903,15 +939,15 @@ void WebView::createContextMenu(QMenu* menu, const QWebHitTestResult &hitTest, c
 
                     // Hiding double Direction + Fonts menu (bug in QtWebKit 2.2)
                     if (i <= 1 && act->menu()) {
-                        if (act->menu()->actions().contains(pageAction(QWebPage::SetTextDirectionDefault)) ||
-                                act->menu()->actions().contains(pageAction(QWebPage::ToggleBold))) {
+                        if (act->menu()->actions().contains(pageAction(QWebEnginePage::SetTextDirectionDefault)) ||
+                                act->menu()->actions().contains(pageAction(QWebEnginePage::ToggleBold))) {
                             act->setVisible(false);
                         }
                     }
 
                     menu->addAction(act);
 
-                    if (act == pageAction(QWebPage::Paste)) {
+                    if (act == pageAction(QWebEnginePage::Paste)) {
                         QAction* a = menu->addAction(QIcon::fromTheme("edit-delete"), tr("Delete"), this, SLOT(editDelete()));
                         a->setEnabled(!selectedText().isEmpty());
                     }
@@ -919,7 +955,7 @@ void WebView::createContextMenu(QMenu* menu, const QWebHitTestResult &hitTest, c
                     ++i;
                 }
 
-                if (menu->actions().last() == pageAction(QWebPage::InspectElement)) {
+                if (menu->actions().last() == pageAction(QWebEnginePage::InspectElement)) {
                     // We have own Inspect Element action
                     menu->actions().last()->setVisible(false);
                 }
@@ -959,7 +995,7 @@ void WebView::createContextMenu(QMenu* menu, const QWebHitTestResult &hitTest, c
 
 void WebView::createPageContextMenu(QMenu* menu, const QPoint &pos)
 {
-    QWebFrame* frameAtPos = page()->frameAt(pos);
+    QWebEngineFrame* frameAtPos = page()->frameAt(pos);
 
     QAction* action = menu->addAction(tr("&Back"), this, SLOT(back()));
     action->setIcon(IconProvider::standardIcon(QStyle::SP_ArrowBack));
@@ -1055,8 +1091,8 @@ void WebView::createLinkContextMenu(QMenu* menu, const QWebHitTestResult &hitTes
     menu->addSeparator();
 
     if (!selectedText().isEmpty()) {
-        pageAction(QWebPage::Copy)->setIcon(QIcon::fromTheme("edit-copy"));
-        menu->addAction(pageAction(QWebPage::Copy));
+        pageAction(QWebEnginePage::Copy)->setIcon(QIcon::fromTheme("edit-copy"));
+        menu->addAction(pageAction(QWebEnginePage::Copy));
     }
 }
 
@@ -1076,8 +1112,8 @@ void WebView::createImageContextMenu(QMenu* menu, const QWebHitTestResult &hitTe
     menu->addSeparator();
 
     if (!selectedText().isEmpty()) {
-        pageAction(QWebPage::Copy)->setIcon(QIcon::fromTheme("edit-copy"));
-        menu->addAction(pageAction(QWebPage::Copy));
+        pageAction(QWebEnginePage::Copy)->setIcon(QIcon::fromTheme("edit-copy"));
+        menu->addAction(pageAction(QWebEnginePage::Copy));
     }
 }
 
@@ -1088,8 +1124,8 @@ void WebView::createSelectedTextContextMenu(QMenu* menu, const QWebHitTestResult
     QString selectedText = page()->selectedText();
 
     menu->addSeparator();
-    if (!menu->actions().contains(pageAction(QWebPage::Copy))) {
-        menu->addAction(pageAction(QWebPage::Copy));
+    if (!menu->actions().contains(pageAction(QWebEnginePage::Copy))) {
+        menu->addAction(pageAction(QWebEnginePage::Copy));
     }
     menu->addAction(QIcon::fromTheme("mail-message-new"), tr("Send text..."), this, SLOT(sendLinkByMail()))->setData(selectedText);
     menu->addSeparator();
@@ -1196,15 +1232,16 @@ void WebView::muteMedia()
         m_clickedElement.evaluateJavaScript("this.muted = true");
     }
 }
+#endif
 
 void WebView::addSpeedDial()
 {
-    page()->mainFrame()->evaluateJavaScript("addSpeedDial()");
+    page()->runJavaScript("addSpeedDial()");
 }
 
 void WebView::configureSpeedDial()
 {
-    page()->mainFrame()->evaluateJavaScript("configureSpeedDial()");
+    page()->runJavaScript("configureSpeedDial()");
 }
 
 void WebView::wheelEvent(QWheelEvent* event)
@@ -1220,7 +1257,7 @@ void WebView::wheelEvent(QWheelEvent* event)
         return;
     }
 
-    QWebView::wheelEvent(event);
+    QWebEngineView::wheelEvent(event);
 }
 
 void WebView::mousePressEvent(QMouseEvent* event)
@@ -1241,19 +1278,22 @@ void WebView::mousePressEvent(QMouseEvent* event)
         break;
 
     case Qt::MiddleButton: {
-        QWebFrame* frame = page()->frameAt(event->pos());
+#if QTWEBENGINE_DISABLED
+        QWebEngineFrame* frame = page()->frameAt(event->pos());
         if (frame) {
             m_clickedUrl = frame->hitTestContent(event->pos()).linkUrl();
             if (!m_clickedUrl.isEmpty()) {
                 return;
             }
         }
+#endif
 
         break;
     }
 
     case Qt::LeftButton: {
-        QWebFrame* frame = page()->frameAt(event->pos());
+#if QTWEBENGINE_DISABLED
+        QWebEngineFrame* frame = page()->frameAt(event->pos());
         if (frame) {
             const QUrl link = frame->hitTestContent(event->pos()).linkUrl();
             if (event->modifiers() & Qt::ControlModifier && isUrlValid(link)) {
@@ -1262,13 +1302,14 @@ void WebView::mousePressEvent(QMouseEvent* event)
                 return;
             }
         }
+#endif
     }
 
     default:
         break;
     }
 
-    QWebView::mousePressEvent(event);
+    QWebEngineView::mousePressEvent(event);
 }
 
 void WebView::mouseReleaseEvent(QMouseEvent* event)
@@ -1279,7 +1320,8 @@ void WebView::mouseReleaseEvent(QMouseEvent* event)
 
     switch (event->button()) {
     case Qt::MiddleButton: {
-        QWebFrame* frame = page()->frameAt(event->pos());
+#if QTWEBENGINE_DISABLED
+        QWebEngineFrame* frame = page()->frameAt(event->pos());
         if (frame) {
             const QUrl link = frame->hitTestContent(event->pos()).linkUrl();
             if (m_clickedUrl == link && isUrlValid(link)) {
@@ -1288,6 +1330,7 @@ void WebView::mouseReleaseEvent(QMouseEvent* event)
                 return;
             }
         }
+#endif
 
         break;
     }
@@ -1296,7 +1339,7 @@ void WebView::mouseReleaseEvent(QMouseEvent* event)
         break;
     }
 
-    QWebView::mouseReleaseEvent(event);
+    QWebEngineView::mouseReleaseEvent(event);
 }
 
 void WebView::mouseMoveEvent(QMouseEvent* event)
@@ -1305,7 +1348,7 @@ void WebView::mouseMoveEvent(QMouseEvent* event)
         return;
     }
 
-    QWebView::mouseMoveEvent(event);
+    QWebEngineView::mouseMoveEvent(event);
 }
 
 void WebView::keyPressEvent(QKeyEvent* event)
@@ -1318,11 +1361,12 @@ void WebView::keyPressEvent(QKeyEvent* event)
 
     // The right/left arrow keys within contents with right to left (RTL) layout have
     // reversed behavior than left to right (LTR) layout.
-    // Example: Key_Right within LTR layout triggers QWebPage::MoveToNextChar but,
-    // Key_Right within RTL layout should trigger QWebPage::MoveToPreviousChar
+    // Example: Key_Right within LTR layout triggers QWebEnginePage::MoveToNextChar but,
+    // Key_Right within RTL layout should trigger QWebEnginePage::MoveToPreviousChar
 
     // event->spontaneous() check guards recursive calling of keyPressEvent
     // Events created from app have spontaneous() == false
+#if QTWEBENGINE_DISABLED
     if (event->spontaneous() && (eventKey == Qt::Key_Left || eventKey == Qt::Key_Right)) {
         const QWebElement elementHasCursor = activeElement();
         if (!elementHasCursor.isNull()) {
@@ -1335,11 +1379,12 @@ void WebView::keyPressEvent(QKeyEvent* event)
             }
         }
     }
+#endif
 
     switch (eventKey) {
     case Qt::Key_C:
         if (event->modifiers() == Qt::ControlModifier) {
-            triggerPageAction(QWebPage::Copy);
+            triggerPageAction(QWebEnginePage::Copy);
             event->accept();
             return;
         }
@@ -1355,7 +1400,7 @@ void WebView::keyPressEvent(QKeyEvent* event)
 
     case Qt::Key_Up:
         if (event->modifiers() & Qt::ShiftModifier) {
-            triggerPageAction(QWebPage::SelectPreviousLine);
+            triggerPageAction(QWebEnginePage::SelectPreviousLine);
             event->accept();
             return;
         }
@@ -1363,7 +1408,7 @@ void WebView::keyPressEvent(QKeyEvent* event)
 
     case Qt::Key_Down:
         if (event->modifiers() & Qt::ShiftModifier) {
-            triggerPageAction(QWebPage::SelectNextLine);
+            triggerPageAction(QWebEnginePage::SelectNextLine);
             event->accept();
             return;
         }
@@ -1372,10 +1417,10 @@ void WebView::keyPressEvent(QKeyEvent* event)
     case Qt::Key_Left:
         if (event->modifiers() & Qt::ShiftModifier) {
             if (event->modifiers() == Qt::ShiftModifier) {
-                triggerPageAction(QWebPage::SelectPreviousChar);
+                triggerPageAction(QWebEnginePage::SelectPreviousChar);
             }
             else if (event->modifiers() == (Qt::ShiftModifier | Qt::ControlModifier)) {
-                triggerPageAction(QWebPage::SelectPreviousWord);
+                triggerPageAction(QWebEnginePage::SelectPreviousWord);
             }
             event->accept();
             return;
@@ -1385,10 +1430,10 @@ void WebView::keyPressEvent(QKeyEvent* event)
     case Qt::Key_Right:
         if (event->modifiers() & Qt::ShiftModifier) {
             if (event->modifiers() == Qt::ShiftModifier) {
-                triggerPageAction(QWebPage::SelectNextChar);
+                triggerPageAction(QWebEnginePage::SelectNextChar);
             }
             else if (event->modifiers() == (Qt::ShiftModifier | Qt::ControlModifier)) {
-                triggerPageAction(QWebPage::SelectNextWord);
+                triggerPageAction(QWebEnginePage::SelectNextWord);
             }
             event->accept();
             return;
@@ -1398,10 +1443,10 @@ void WebView::keyPressEvent(QKeyEvent* event)
     case Qt::Key_Home:
         if (event->modifiers() & Qt::ShiftModifier) {
             if (event->modifiers() == Qt::ShiftModifier) {
-                triggerPageAction(QWebPage::SelectStartOfLine);
+                triggerPageAction(QWebEnginePage::SelectStartOfLine);
             }
             else if (event->modifiers() == (Qt::ShiftModifier | Qt::ControlModifier)) {
-                triggerPageAction(QWebPage::SelectStartOfDocument);
+                triggerPageAction(QWebEnginePage::SelectStartOfDocument);
             }
             event->accept();
             return;
@@ -1411,10 +1456,10 @@ void WebView::keyPressEvent(QKeyEvent* event)
     case Qt::Key_End:
         if (event->modifiers() & Qt::ShiftModifier) {
             if (event->modifiers() == Qt::ShiftModifier) {
-                triggerPageAction(QWebPage::SelectEndOfLine);
+                triggerPageAction(QWebEnginePage::SelectEndOfLine);
             }
             else if (event->modifiers() == (Qt::ShiftModifier | Qt::ControlModifier)) {
-                triggerPageAction(QWebPage::SelectEndOfDocument);
+                triggerPageAction(QWebEnginePage::SelectEndOfDocument);
             }
             event->accept();
             return;
@@ -1423,12 +1468,12 @@ void WebView::keyPressEvent(QKeyEvent* event)
 
     case Qt::Key_Insert:
         if (event->modifiers() == Qt::ControlModifier) {
-            triggerPageAction(QWebPage::Copy);
+            triggerPageAction(QWebEnginePage::Copy);
             event->accept();
             return;
         }
         if (event->modifiers() == Qt::ShiftModifier) {
-            triggerPageAction(QWebPage::Paste);
+            triggerPageAction(QWebEnginePage::Paste);
             event->accept();
             return;
         }
@@ -1438,7 +1483,7 @@ void WebView::keyPressEvent(QKeyEvent* event)
         break;
     }
 
-    QWebView::keyPressEvent(event);
+    QWebEngineView::keyPressEvent(event);
 }
 
 void WebView::keyReleaseEvent(QKeyEvent* event)
@@ -1447,12 +1492,12 @@ void WebView::keyReleaseEvent(QKeyEvent* event)
         return;
     }
 
-    QWebView::keyReleaseEvent(event);
+    QWebEngineView::keyReleaseEvent(event);
 }
 
 void WebView::resizeEvent(QResizeEvent* event)
 {
-    QWebView::resizeEvent(event);
+    QWebEngineView::resizeEvent(event);
     emit viewportResized(page()->viewportSize());
 }
 
@@ -1531,5 +1576,5 @@ bool WebView::eventFilter(QObject* obj, QEvent* event)
         return false;
     }
 #endif
-    return QWebView::eventFilter(obj, event);
+    return QWebEngineView::eventFilter(obj, event);
 }

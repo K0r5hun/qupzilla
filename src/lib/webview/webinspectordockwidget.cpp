@@ -22,6 +22,8 @@
 #include "webtab.h"
 #include "browserwindow.h"
 
+#if QTWEBENGINE_DISABLED
+
 WebInspectorDockWidget::WebInspectorDockWidget(BrowserWindow* window)
     : QDockWidget(window)
     , m_window(window)
@@ -58,7 +60,7 @@ void WebInspectorDockWidget::close()
 
 void WebInspectorDockWidget::show()
 {
-    QWebPage* page = m_window->weView()->page();
+    QWebEnginePage* page = m_window->weView()->page();
     QPointer<WebInspector> inspector = m_inspectors[page];
 
     if (!inspector) {
@@ -87,3 +89,5 @@ void WebInspectorDockWidget::tabChanged(int index)
         close();
     }
 }
+
+#endif

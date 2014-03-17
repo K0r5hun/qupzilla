@@ -22,22 +22,22 @@
 
 #include "qzcommon.h"
 
-class QWebHistory;
-class QWebHistoryItem;
+class QWebEngineHistory;
+class QWebEngineHistoryItem;
 
 class WebHistoryWrapper
 {
 public:
-    static QList<QWebHistoryItem> forwardItems(int maxItems, QWebHistory* history);
-    static QList<QWebHistoryItem> backItems(int maxItems, QWebHistory* history);
+    static QList<QWebEngineHistoryItem> forwardItems(int maxItems, QWebEngineHistory* history);
+    static QList<QWebEngineHistoryItem> backItems(int maxItems, QWebEngineHistory* history);
 
-    static bool canGoForward(QWebHistory* history);
-    static bool canGoBack(QWebHistory* history);
+    static bool canGoForward(QWebEngineHistory* history);
+    static bool canGoBack(QWebEngineHistory* history);
 
-    static void goBack(QWebHistory* history);
-    static void goForward(QWebHistory* history);
+    static void goBack(QWebEngineHistory* history);
+    static void goForward(QWebEngineHistory* history);
 
-    static int indexOfItem(const QList<QWebHistoryItem> &list, const QWebHistoryItem &item);
+    static int indexOfItem(const QList<QWebEngineHistoryItem> &list, const QWebEngineHistoryItem &item);
 };
 
 #endif // WEBHISTORYWRAPPER_H

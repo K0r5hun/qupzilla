@@ -31,7 +31,7 @@
 //
 // Got an idea how to determine it from kWebKitPart.
 
-PopupWebPage::PopupWebPage(QWebPage::WebWindowType type, BrowserWindow* window)
+PopupWebPage::PopupWebPage(QWebEnginePage::WebWindowType type, BrowserWindow* window)
     : WebPage()
     , m_window(window)
     , m_type(type)

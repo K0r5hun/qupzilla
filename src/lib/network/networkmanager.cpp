@@ -52,6 +52,8 @@
 #include <QAuthenticator>
 #include <QDirIterator>
 
+#if QTWEBENGINE_DISABLED
+
 static QString fileNameForCert(const QSslCertificate &cert)
 {
     QString certFileName = CertificateInfoWidget::certificateItemText(cert);
@@ -324,7 +326,7 @@ void NetworkManager::authentication(QNetworkReply* reply, QAuthenticator* auth)
     }
 
     // Try to set the originating WebTab as a current tab
-    QWebFrame* frame = qobject_cast<QWebFrame*>(reply->request().originatingObject());
+    QWebEngineFrame* frame = qobject_cast<QWebEngineFrame*>(reply->request().originatingObject());
     if (frame) {
         WebPage* page = qobject_cast<WebPage*>(frame->page());
         if (page) {
@@ -747,3 +749,5 @@ void NetworkManager::loadCertificates()
     new CaBundleUpdater(this, this);
 #endif
 }
+
+#endif

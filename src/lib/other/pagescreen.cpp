@@ -23,9 +23,11 @@
 #include "browserwindow.h"
 #include "settings.h"
 
+#if QTWEBENGINE_DISABLED
+
 #include <QFileDialog>
 #include <QMessageBox>
-#include <QWebFrame>
+#include <QWebEngineFrame>
 #include <QLabel>
 #include <QTimer>
 #include <QMovie>
@@ -193,7 +195,7 @@ void PageScreen::saveAsDocument(const QString &format)
 
 void PageScreen::createThumbnail()
 {
-    QWebPage* page = m_view->page();
+    QWebEnginePage* page = m_view->page();
 
     const int heightLimit = 20000;
     const QPoint originalScrollPosition = page->mainFrame()->scrollPosition();
@@ -277,3 +279,5 @@ PageScreen::~PageScreen()
 {
     delete ui;
 }
+
+#endif

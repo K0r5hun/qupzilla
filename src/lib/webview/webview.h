@@ -18,14 +18,17 @@
 #ifndef WEBVIEW_H
 #define WEBVIEW_H
 
-#include <QWebView>
+#include <QWebEngineView>
+#if QTWEBENGINE_DISABLED
 #include <QWebElement>
+#endif
+#include <QIcon>
 
 #include "qzcommon.h"
 
 class WebPage;
 
-class QUPZILLA_EXPORT WebView : public QWebView
+class QUPZILLA_EXPORT WebView : public QWebEngineView
 {
     Q_OBJECT
 public:
@@ -36,7 +39,7 @@ public:
     QUrl url() const;
 
     WebPage* page() const;
-    void setPage(QWebPage* page);
+    void setPage(QWebEnginePage* page);
 
     void load(const QUrl &url);
     void load(const QNetworkRequest &request,
@@ -50,7 +53,9 @@ public:
     void fakeLoadingProgress(int progress);
 
     bool hasRss() const;
+#if QTWEBENGINE_DISABLED
     QWebElement activeElement() const;
+#endif
 
     // Executes window.onbeforeunload, returns true if view can be closed
     bool onBeforeUnload();
@@ -88,7 +93,7 @@ public slots:
     void back();
     void forward();
 
-    void printPage(QWebFrame* frame = 0);
+    void printPage(QWebEngineFrame* frame = 0);
     void sendPageByMail();
     void savePageAs();
 
@@ -113,7 +118,7 @@ protected slots:
     void downloadUrlToDisk();
     void copyImageToClipboard();
     void openActionUrl();
-    void showSource(QWebFrame* frame = 0, const QString &selectedHtml = QString());
+    void showSource(QWebEngineFrame* frame = 0, const QString &selectedHtml = QString());
     void showSiteInfo();
     void searchSelectedText();
     void searchSelectedTextInBackgroundTab();
@@ -152,6 +157,7 @@ protected:
     void applyZoom();
     QUrl lastUrl();
 
+#if QTWEBENGINE_DISABLED
     bool isMediaElement(const QWebElement &element);
     void checkForForm(QMenu* menu, const QWebElement &element);
 
@@ -161,10 +167,13 @@ protected:
     void createImageContextMenu(QMenu* menu, const QWebHitTestResult &hitTest);
     void createSelectedTextContextMenu(QMenu* menu, const QWebHitTestResult &hitTest);
     void createMediaContextMenu(QMenu* menu, const QWebHitTestResult &hitTest);
+#endif
 
 private slots:
+#if QTWEBENGINE_DISABLED
     void pauseMedia();
     void muteMedia();
+#endif
     void frameStateChanged();
     void emitChangedUrl();
     void checkRss();
@@ -183,8 +192,10 @@ private:
     QUrl m_aboutToLoadUrl;
     QUrl m_lastUrl;
 
+#if QTWEBENGINE_DISABLED
     QWebElement m_clickedElement;
-    QWebFrame* m_clickedFrame;
+    QWebEngineFrame* m_clickedFrame;
+#endif
     QUrl m_clickedUrl;
 
     WebPage* m_page;

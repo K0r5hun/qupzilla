@@ -26,7 +26,7 @@
 #if QT_VERSION < 0x050000
 #include "qwebkitversion.h"
 #else
-#include <QWebPage>
+#include <QWebEnginePage>
 #endif
 
 AboutDialog::AboutDialog(QWidget* parent)
@@ -71,11 +71,15 @@ void AboutDialog::showAbout()
                        + " (" + GIT_REVISION + ")"
 #endif
                                                                       );
+#if QTWEBENGINE_DISABLED
         m_aboutHtml += tr("<b>WebKit version %1</b></p>").arg(qWebKitVersion());
+#endif
         m_aboutHtml += QString("<p>&copy; %1 %2<br/>").arg(Qz::COPYRIGHT, Qz::AUTHOR);
         m_aboutHtml += tr("<small>Build time: %1 </small></p>").arg(Qz::BUILDTIME);
         m_aboutHtml += QString("<p><a href=%1>%1</a></p>").arg(Qz::WWWADDRESS);
+#if QTWEBENGINE_DISABLED
         m_aboutHtml += "<p>" + (mApp->windowCount() > 0 ? mApp->getWindow()->weView()->page()->userAgentForUrl(QUrl()) : QString()) + "</p>";
+#endif
         m_aboutHtml += "</div></center>";
     }
     ui->textBrowser->setHtml(m_aboutHtml);
