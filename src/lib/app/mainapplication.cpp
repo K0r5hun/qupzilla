@@ -518,7 +518,7 @@ CookieManager* MainApplication::cookieManager()
     return m_cookieManager;
 }
 
-QNetworkAccessManager *MainApplication::networkManager()
+QNetworkAccessManager* MainApplication::networkManager()
 {
     if (!m_networkManager) {
         m_networkManager = new QNetworkAccessManager(this);

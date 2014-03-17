@@ -103,6 +103,8 @@ private slots:
     void printFrame(QWebEngineFrame* frame);
     void downloadRequested(const QNetworkRequest &request);
     void windowCloseRequested();
+    void authentication(const QUrl &requestUrl, QAuthenticator* auth);
+    void proxyAuthentication(const QUrl &requestUrl, QAuthenticator* auth, const QString &proxyHost);
 
     void dbQuotaExceeded(QWebEngineFrame* frame);
 

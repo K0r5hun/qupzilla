@@ -487,7 +487,7 @@ void DownloadItem::updateDownload()
     }
 #else
     if (ui->progressBar->maximum() == 0 && m_outputFile.isOpen() &&
-            ((m_reply && m_reply->isFinished()) )) {
+            ((m_reply && m_reply->isFinished()))) {
         downloadProgress(0, 0);
         finished();
     }
