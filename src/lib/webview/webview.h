@@ -87,6 +87,7 @@ public slots:
     void editSelectAll();
     void editDelete();
 
+    void stop();
     void reload();
     void reloadBypassCache();
 

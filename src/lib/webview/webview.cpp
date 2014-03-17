@@ -365,6 +365,13 @@ void WebView::editDelete()
     QApplication::sendEvent(this, &ev);
 }
 
+void WebView::stop()
+{
+    // FIXME: Workaround to at least stop loading animation
+    QWebEngineView::stop();
+    emit loadFinished(false);
+}
+
 void WebView::reload()
 {
     m_isReloading = true;

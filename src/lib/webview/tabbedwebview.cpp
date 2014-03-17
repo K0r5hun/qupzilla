@@ -257,12 +257,6 @@ void TabbedWebView::contextMenuEvent(QContextMenuEvent* event)
     WebView::contextMenuEvent(event);
 }
 
-void TabbedWebView::stop()
-{
-    triggerPageAction(QWebEnginePage::Stop);
-    slotLoadFinished();
-}
-
 void TabbedWebView::openNewTab()
 {
     tabWidget()->addView(QUrl());
